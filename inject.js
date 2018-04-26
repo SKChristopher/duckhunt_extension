@@ -1,3 +1,32 @@
+// pick the words to replace
+const loopText = elementType => {
+  const elements = document.querySelectorAll(elementType);
+  for (let i = 0; i < elements.length; i += 1) {
+    if (
+      elements[i].innerHTML.indexOf("class=") === -1 &&
+      elements[i].innerHTML.indexOf("id=") === -1
+    ) {
+      elements[i].innerHTML = elements[i].innerHTML.replace(/hello/gi, "howdy");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/your/gi, "y'alls");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/you/gi, "y'all");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/the/gi, "tha");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/to/gi, "ta");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/er/gi, "a");
+      elements[i].innerHTML = elements[i].innerHTML.replace(/if/gi, "if'n");
+    }
+  }
+};
+// replace the words
+loopText("p");
+loopText("h1");
+loopText("h2");
+loopText("h3");
+loopText("h4");
+loopText("h5");
+loopText("h6");
+loopText("span"); // problem with changing class names and ruining css
+loopText("section");
+
 // create the bird
 class Bird {
   constructor() {
@@ -21,6 +50,7 @@ class Bird {
         deadBird.style.height = "80px";
         deadBird.style.width = "80px";
         deadBird.style.position = "fixed";
+        deadBird.style.zIndex = "9001";
         let yPosition = document.getElementById("bird").getBoundingClientRect()
           .top;
         deadBird.style.top = yPosition + "px";
@@ -32,9 +62,10 @@ class Bird {
         document.body.appendChild(deadBird);
         // Delete bird from document
         var toDelete = document.getElementById("bird");
-		toDelete.parentElement.removeChild(toDelete);
-		// disable hunter button
+        toDelete.parentElement.removeChild(toDelete);
+        // disable hunter button
 		friendButton.disabled = true;
+		gameButton.disabled = true;
         // Fade and delete deadBird
         var opacity = 1;
         var timer2 = setInterval(() => {
@@ -47,11 +78,12 @@ class Bird {
         }, 2000);
         // Update score
         score += 100;
-        scoreDiv.innerHTML = "<p>Score: " + score + "</p>";
+        scoreText.textContent = "Score: " + score;
         // Create new bird and start listener
         setTimeout(function() {
-		  reverseLeft = false;
+          reverseLeft = false;
 		  friendButton.disabled = false;
+		  gameButton.disabled = false;
           obj = new Bird();
           obj.startListener();
         }, 2500);
@@ -86,8 +118,10 @@ class Bird {
           yPosition -= 1;
           heart.style.top = yPosition + "px";
         }, 5);
-        timer();
-        setTimeout(clearInterval(timer), 1000);
+        setTimeout(() => {
+          clearInterval(timer);
+          heart.parentElement.removeChild(heart);
+        }, 5000);
       }
     });
   }
@@ -136,6 +170,7 @@ const randomNumber = () => {
 let score = 0;
 const scoreDiv = document.createElement("div");
 scoreDiv.id = "score-div";
+scoreDiv.style.all = "initial";
 scoreDiv.style.position = "fixed";
 scoreDiv.style.bottom = "15px";
 scoreDiv.style.right = "15px";
@@ -143,7 +178,7 @@ scoreDiv.style.backgroundColor = "black";
 scoreDiv.style.border = "1px solid pink";
 scoreDiv.style.color = "white";
 scoreDiv.style.zIndex = "9001";
-scoreDiv.style.width = "149px";
+scoreDiv.style.width = "150px";
 scoreDiv.style.height = "40px";
 scoreDiv.style.textAlign = "center";
 scoreDiv.style.fontSize = "20px";
@@ -153,14 +188,18 @@ scoreDiv.style.opacity = ".75";
 document.body.appendChild(scoreDiv);
 // create score text
 const scoreText = document.createElement("p");
+scoreText.id = 'score-text';
+scoreText.style.fontSize = "20px";
 scoreText.textContent = "Score: " + score;
+scoreText.style.marginTop = "7.5px";
 document.getElementById("score-div").appendChild(scoreText);
 // Creating button to start friendly mode
 let friendMode = false;
 const friendButton = document.createElement("button");
 friendButton.id = "friend";
+friendButton.style.all = "initial";
 friendButton.style.position = "fixed";
-friendButton.style.bottom = "60px";
+friendButton.style.bottom = "70px";
 friendButton.style.right = "15px";
 friendButton.style.backgroundColor = "pink";
 friendButton.style.border = "1px solid black";
@@ -189,40 +228,45 @@ document.getElementById("friend").addEventListener("click", function() {
   }
 });
 
-// translate the page to duck hunter speak
-function replaceTextOnPage(from, to) {
-  getAllTextNodes().forEach(function(node) {
-    node.nodeValue = node.nodeValue.replace(new RegExp(quote(from), "g"), to);
-  });
+// turn on and off
+let running = true;
+const gameButton = document.createElement("button");
+gameButton.id = "game";
+gameButton.style.all = "initial";
+gameButton.style.position = "fixed";
+gameButton.style.bottom = "120px";
+gameButton.style.right = "15px";
+gameButton.style.backgroundColor = "lightblue";
+gameButton.style.border = "1px solid blue";
+gameButton.innerHTML = "End";
+gameButton.style.zIndex = "9001";
+gameButton.style.width = "150px";
+gameButton.style.height = "40px";
+gameButton.style.textAlign = "center";
+gameButton.style.fontSize = "15px";
+gameButton.style.fontFamily = "Arial";
+gameButton.style.borderRadius = "3px";
+gameButton.style.opacity = ".75";
+document.body.appendChild(gameButton);
 
-  function getAllTextNodes() {
-    var result = [];
-
-    (function scanSubTree(node) {
-      if (node.childNodes.length)
-        for (var i = 0; i < node.childNodes.length; i++)
-          scanSubTree(node.childNodes[i]);
-      else if (node.nodeType == Node.TEXT_NODE) result.push(node);
-    })(document);
-
-    return result;
+// listener for turn off and on
+document.getElementById("game").addEventListener("click", function() {
+  if (running) {
+    running = !running;
+	gameButton.innerHTML = "Start";
+	friendButton.innerHTML = "Friendly Mode";
+	friendMode = false;
+	friendButton.disabled = true;
+	// score = 0;
+	// scoreText.textContent = "Score: " + score;
+    // Delete bird from document
+    var toDelete = document.getElementById("bird");
+    toDelete.parentElement.removeChild(toDelete);
+  } else {
+    running = !running;
+	gameButton.innerHTML = "End";
+	friendButton.disabled = false;
+    obj = new Bird();
+    obj.startListener();
   }
-
-  function quote(str) {
-    return (str + "").replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
-  }
-}
-
-// pick the words to replace
-replaceTextOnPage("you", "y'all");
-replaceTextOnPage("You", "Y'all");
-replaceTextOnPage("hello", "howdy");
-replaceTextOnPage("Hello", "Howdy");
-// replaceTextOnPage("to", "ta"); // disrupting css on google.com
-replaceTextOnPage("your", "yer");
-replaceTextOnPage("Your", "Yer");
-// replaceTextOnPage("ing", "in'"); // disrupting css on google.com
-replaceTextOnPage("I'm", "imma");
-replaceTextOnPage("the", "tha");
-replaceTextOnPage("The", "Tha");
-// replaceTextOnPage("er", "a"); // disrupting css on google.com
+});
